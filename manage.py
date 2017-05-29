@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO, format='[%(levelname)s] - %(message)s')
 def create_database():
     """Create database."""
     logging.info("Creating database")
-    engine = create_engine("postgresql://postgres:postgres@localhost/postgres")
+    engine = create_engine("postgresql://postgres:postgres@db/postgres")
     conn = engine.connect()
     conn.execute("commit")
 
@@ -41,7 +41,7 @@ def create_database():
 @manager.command
 def run():
     """Run the app."""
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=80)
 
 if __name__ == "__main__":
     manager.run()

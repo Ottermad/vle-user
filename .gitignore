@@ -90,3 +90,9 @@ ENV/
 
 # IDE files
 .idea/
+
+# SQLite test database
+*.sqlite
+
+# Mac Stuff
+.DS_Store

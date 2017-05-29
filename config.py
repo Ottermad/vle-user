@@ -2,7 +2,7 @@
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-DATABASE_NAME = "mock_election"
+DATABASE_NAME = "user_db"
 
 
 class Config:
@@ -10,13 +10,14 @@ class Config:
 
     SECRET_KEY = os.environ.get('SECRET_KEY', "this_needs_to_be_more_secure")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SERVICE_NAME = 'user'
 
 
 class Development(Config):
     """Config used in development."""
 
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost/{}'.format(DATABASE_NAME)
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@db/{}'.format(DATABASE_NAME)
 
 
 class Testing(Config):
