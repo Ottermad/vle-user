@@ -6,7 +6,7 @@ from internal.exceptions import CustomError, FieldInUseError, NotFoundError, Una
 from internal.helper import json_from_request, check_keys, get_record_by_id
 # from app.user.helper_functions import get_user_by_id
 
-from .models import Permission, Role
+from .models import Permission
 
 
 def set_default_permissions(request):
@@ -28,14 +28,9 @@ def set_default_permissions(request):
         db.session.add(permission)
     db.session.commit()
 
-    # Create roles
-    for role in Role.default_roles(school_id):
-        db.session.add(role)
-    db.session.commit()
-
     #  Assign user to admin role
-    role = Role.query.filter_by(name="ADMINISTRATOR", school_id=school_id).first()
-    g.user.roles.append(role)
+    permission = Permission.query.filter_by(name="Administrator", school_id=school_id).first()
+    g.user.permission.append(permission)
     db.session.add(g.user)
     db.session.commit()
 

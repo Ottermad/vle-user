@@ -31,6 +31,7 @@ class Testing(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(
         basedir, 'testing-database.sqlite')
     PRESERVE_CONTEXT_ON_EXCEPTION = False
+    NO_REGISTER = True
 
 
 class Migrations(Development):

@@ -1,7 +1,8 @@
 from internal.decorators import permissions_required
-from app.user.form_functions import create_form, list_forms, edit_form, delete_form, form_detail
-from app.user.user_functions import user_listing, user_create, current_user_details, user_update, user_detail, \
-    user_delete
+from app.user.form_functions import create_form, list_forms, edit_form, \
+    delete_form, form_detail
+from app.user.user_functions import user_listing, user_create, \
+    current_user_details, user_update, user_detail, user_delete, authenticate
 from flask import Blueprint, request
 from app import services
 
@@ -11,6 +12,7 @@ user_blueprint = Blueprint("user", __name__, url_prefix="/user")
 @user_blueprint.route("/")
 def index_view():
     return "User Index"
+
 
 @user_blueprint.route("/test")
 def test():
@@ -65,3 +67,8 @@ def form_detail_update_delete(form_id):
 
     if request.method == "DELETE":
         return delete_form(request, form_id)
+
+
+@user_blueprint.route("/authenticate", methods=("POST",))
+def authenticate_view():
+    return authenticate(request)

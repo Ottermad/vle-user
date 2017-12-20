@@ -6,7 +6,9 @@ from tests.user.factories import UserFactory
 from tests.permissions.factories import PermissionFactory
 
 from app.user.models import User
-from app.permissions.models import Permission, Role
+from app.permissions.models import Permission
+
+from internal.test_helper import AuthUser
 
 school_factory = SchoolFactory()
 user_factory = UserFactory()
@@ -18,33 +20,10 @@ class PermissionAPITestCase(APITestCase):
         super(PermissionAPITestCase, self).setUp()
         self.school = school_factory.new_into_db()
         self.user = user_factory.new_into_db(school_id=self.school.id, permissions=['Administrator'])
+        self.admin = AuthUser(permissions=["Administrator"], school_id=self.school.id, user_id=self.user.id)
 
     def tearDown(self):
         super(PermissionAPITestCase, self).tearDown()
-
-    # def test_set_defaults(self):
-        # school = school_factory.new_into_db(without_roles=True, without_permissions=True)
-        # user = user_factory.new_into_db(school_id=school.id)
-        #
-        # token = self.get_auth_token(user.username, user.raw_password)
-        #
-        # response = self.client.post(
-        #     '/permissions/set-defaults',
-        #     headers={'Authorization': 'JWT ' + token})
-        #
-        # json_response = json.loads(response.data.decode('utf-8'))
-        # self.assertTrue(json_response['success'])
-        #
-        # permission_query = Permission.query.filter_by(school_id=school.id)
-        # self.assertIsNotNone(permission_query.first())
-        #
-        # role_query = Role.query.filter_by(school_id=school.id)
-        # self.assertIsNotNone(role_query.first())
-        #
-        # user_from_db = User.query.get(user.id)
-        # self.assertIsNotNone(user_from_db)
-        # role_names = [role.name for role in user_from_db.roles]
-        # self.assertIn('ADMINISTRATOR', role_names)
 
     def test_permission_create(self):
         permission = permission_factory.new(school_id=self.school.id)
@@ -54,12 +33,10 @@ class PermissionAPITestCase(APITestCase):
             name=permission.name, school_id=self.school.id)
         self.assertIsNone(permission_query.first())
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.post(
             '/permissions/permission',
             data=json.dumps(permission.to_dict()),
-            headers={'Authorization': 'JWT ' + token, 'Content-Type': 'application/json'}
+            headers={**self.admin.headers_dict(), 'Content-Type': 'application/json'}
         )
 
         self.assertEqual(response.status_code, 201)
@@ -68,11 +45,9 @@ class PermissionAPITestCase(APITestCase):
     def test_permission_listing(self):
         permissions = [permission_factory.new_into_db(school_id=self.school.id)]
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.get(
             '/permissions/permission',
-            headers={'Authorization': 'JWT ' + token}
+            headers=self.admin.headers_dict()
         )
 
         self.assertEqual(response.status_code, 200)
@@ -85,11 +60,9 @@ class PermissionAPITestCase(APITestCase):
     def test_permission_detail(self):
         permission = permission_factory.new_into_db(school_id=self.school.id)
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.get(
             '/permissions/permission/{}'.format(permission.id),
-            headers={'Authorization': 'JWT ' + token}
+            headers=self.admin.headers_dict()
         )
 
         self.assertEqual(response.status_code, 200)
@@ -101,11 +74,9 @@ class PermissionAPITestCase(APITestCase):
     def test_permission_delete(self):
         permission = permission_factory.new_into_db(school_id=self.school.id)
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.delete(
             '/permissions/permission/{}'.format(permission.id),
-            headers={'Authorization': 'JWT ' + token}
+            headers=self.admin.headers_dict()
         )
 
         self.assertEqual(response.status_code, 200)
@@ -118,12 +89,10 @@ class PermissionAPITestCase(APITestCase):
         new_name = 'New Name'
         self.assertNotEqual(permission.name, new_name)
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.put(
             '/permissions/permission/{}'.format(permission.id),
             data=json.dumps({'name': new_name}),
-            headers={'Authorization': 'JWT ' + token, 'Content-Type': 'application/json'}
+            headers={**self.admin.headers_dict(), 'Content-Type': 'application/json'}
         )
 
         self.assertEqual(response.status_code, 200)
@@ -138,12 +107,10 @@ class PermissionAPITestCase(APITestCase):
         new_description = 'Description which is new'
         self.assertNotEqual(permission.name, new_description)
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.put(
             '/permissions/permission/{}'.format(permission.id),
             data=json.dumps({'description': new_description}),
-            headers={'Authorization': 'JWT ' + token, 'Content-Type': 'application/json'}
+            headers={**self.admin.headers_dict(), 'Content-Type': 'application/json'}
         )
 
         self.assertEqual(response.status_code, 200)
@@ -158,14 +125,11 @@ class PermissionAPITestCase(APITestCase):
         permission = permission_factory.new_into_db(school_id=self.school.id)
         self.assertNotIn(permission.id, [p.id for p in user.permissions])
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.post(
-            '/permissions/permission/grant'.format(permission.id),
+            '/permissions/permission/grant',
             data=json.dumps({'user_id': user.id, 'permission_id': permission.id}),
-            headers={'Authorization': 'JWT ' + token, 'Content-Type': 'application/json'}
+            headers={**self.admin.headers_dict(), 'Content-Type': 'application/json'}
         )
-
         self.assertEqual(response.status_code, 201)
 
         # Do not need to fetch a new user object as permissions runs it's own query
@@ -176,12 +140,10 @@ class PermissionAPITestCase(APITestCase):
         user = user_factory.new_into_db(school_id=self.school.id, permissions=[permission.name])
         self.assertIn(permission.id, [p.id for p in user.permissions])
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.delete(
             '/permissions/permission/grant'.format(permission.id),
             data=json.dumps({'user_id': user.id, 'permission_id': permission.id}),
-            headers={'Authorization': 'JWT ' + token, 'Content-Type': 'application/json'}
+            headers={**self.admin.headers_dict(), 'Content-Type': 'application/json'}
         )
 
         self.assertEqual(response.status_code, 200)
@@ -193,12 +155,10 @@ class PermissionAPITestCase(APITestCase):
         user = user_factory.new_into_db(school_id=self.school.id, permissions=[permission.name])
         self.assertIn(permission.id, [p.id for p in user.permissions])
 
-        token = self.get_auth_token(self.user.username, self.user.raw_password)
-
         response = self.client.delete(
             '/permissions/permission/grant'.format(permission.id),
             data=json.dumps({'user_id': user.id, 'all': True}),
-            headers={'Authorization': 'JWT ' + token, 'Content-Type': 'application/json'}
+            headers={**self.admin.headers_dict(), 'Content-Type': 'application/json'}
         )
 
         self.assertEqual(response.status_code, 200)

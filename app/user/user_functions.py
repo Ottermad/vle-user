@@ -4,15 +4,17 @@ from internal.helper import get_boolean_query_param, json_from_request, check_ke
 from app.user.models import Form
 from flask import jsonify, g
 from .models import User
+from flask_bcrypt import check_password_hash
+
 
 def authenticate(request):
     #  Decode the JSON data
     data = json_from_request(request)
 
     # Validate data
-    expected_keys = ["username", "password"] # List of keys which need to in JSON
-    check_keys(expected_keys, data) # Checks keys are in JSON
-    check_values_not_blank(expected_keys, data) # Check that values for the keys are not blank
+    expected_keys = ["username", "password"]
+    check_keys(expected_keys, data)
+    check_values_not_blank(expected_keys, data)
     username = data['username']
     password = data['password']
 
@@ -25,12 +27,11 @@ def authenticate(request):
     if not check_password_hash(user.password, password):
         raise CustomError(401, message='Username or password were not found.')
 
-    return user.to_dict()
+    return jsonify({'success': True, 'user': user.to_dict(nest_permissions=True)})
+
 
 def user_listing(request):
     # Get parameters from query string
-    nest_roles = get_boolean_query_param(request, 'nest-roles')
-    nest_role_permissions = get_boolean_query_param(request, 'nest-role-permissions')
     nest_permissions = get_boolean_query_param(request, 'nest-permissions')
     nest_forms = get_boolean_query_param(request, 'nest-forms')
 
@@ -40,8 +41,6 @@ def user_listing(request):
     # Create a list containing each user as a dictionary
     users_list = [
         u.to_dict(
-            nest_roles=nest_roles,
-            nest_role_permissions=nest_role_permissions,
             nest_permissions=nest_permissions,
             nest_form=nest_forms
         ) for u in users
@@ -149,28 +148,23 @@ def user_detail(request, user_id):
     user = get_record_by_id(user_id, User)
 
     # Get query params
-    nest_roles = get_boolean_query_param(request, 'nest-roles')
-    nest_role_permissions = get_boolean_query_param(request, 'nest-role-permissions')
     nest_permissions = get_boolean_query_param(request, 'nest-permissions')
 
     # Return user
     return jsonify({
         'success': True,
         "user": user.to_dict(
-            nest_roles=nest_roles,
-            nest_role_permissions=nest_role_permissions,
             nest_permissions=nest_permissions
         )
     })
 
 
 def current_user_details(request):
-    nest_roles = get_boolean_query_param(request, 'nest-roles')
-    nest_role_permissions = get_boolean_query_param(request, 'nest-role-permissions')
     nest_permissions = get_boolean_query_param(request, 'nest-permissions')
-    user_dict = g.user.to_dict(
-        nest_roles=nest_roles,
-        nest_role_permissions=nest_role_permissions,
+
+    user = get_record_by_id(g.user.id, User)
+
+    user_dict = user.to_dict(
         nest_permissions=nest_permissions
     )
     return jsonify({'success': True, 'user': user_dict})

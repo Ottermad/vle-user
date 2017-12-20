@@ -2,7 +2,7 @@ from app import db
 
 
 from flask_bcrypt import generate_password_hash
-from app.permissions.models import user_roles, user_permissions
+from app.permissions.models import user_permissions
 
 
 class User(db.Model):
@@ -24,14 +24,10 @@ class User(db.Model):
 
     form = db.relationship('Form', backref=db.backref('form', lazy='dynamic'))
 
-    # Permissions and Roles
+    # Permissions
     permissions = db.relationship(
         'Permission', secondary=user_permissions,
         backref=db.backref('user_permissions', lazy='dynamic')
-    )
-    roles = db.relationship(
-        'Role', secondary=user_roles,
-        backref=db.backref('user_roles', lazy='dynamic')
     )
 
 
@@ -81,10 +77,6 @@ class User(db.Model):
                 for permission in role.permissions:
                     users_permissions.add(permission.name)
         return permissions.issubset(users_permissions)
-
-    def has_roles(self, roles):
-        users_roles = {role.name for role in self.roles}
-        return roles.issubset(users_roles)
 
 
 class Form(db.Model):
