@@ -3,7 +3,8 @@ from flask import Blueprint, jsonify, g, request
 from internal.decorators import permissions_required
 
 from app.permissions.permission_functions import set_default_permissions, permission_create, permissions_list, \
-    permission_detail, permission_delete, permission_update, grant_permission, remove_permission
+    permission_detail, permission_delete, permission_update, \
+    grant_permission, remove_permission, validate_permissions
 
 permissions_blueprint = Blueprint('permissions', __name__, url_prefix='/permissions')
 
@@ -42,3 +43,8 @@ def grant_or_remove_permission_view():
         return grant_permission(request)
     elif request.method == "DELETE":
         return remove_permission(request)
+
+
+@permissions_blueprint.route('/validate', methods=("POST",))
+def validate():
+    return validate_permissions(request)
