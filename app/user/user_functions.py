@@ -31,12 +31,17 @@ def authenticate(request):
 
 
 def user_listing(request):
+    # Query database and get users in same school
+    users = User.query.filter_by(school_id=g.user.school_id)
+   
     # Get parameters from query string
     nest_permissions = get_boolean_query_param(request, 'nest-permissions')
     nest_forms = get_boolean_query_param(request, 'nest-forms')
 
-    # Query database and get users in same school
-    users = User.query.filter_by(school_id=g.user.school_id)
+    ids = request.args.get('ids')
+    if ids is not None:
+        str_ids = ids.split(",")
+        users = users.filter(User.id.in_(str_ids))
 
     # Create a list containing each user as a dictionary
     users_list = [
