@@ -4,7 +4,7 @@ from tests.school.factories import SchoolFactory
 
 from app import db
 from app.user.models import User, Form
-from app.permissions.models import Permission, Role
+from app.permissions.models import Permission
 
 fake = Faker()
 
@@ -64,9 +64,6 @@ class UserFactory:
             permission_query = Permission.query.filter(Permission.name.in_(permissions), Permission.school_id == school_id)
             [user.permissions.append(p) for p in permission_query]
 
-        if len(roles) > 0:
-            role_query = Role.query.filter(Role.name.in_(roles), Role.school_id == school_id)
-            [user.roles.append(r) for r in role_query]
         return user
 
     def new_into_db(self, **kwargs):
@@ -74,7 +71,3 @@ class UserFactory:
         db.session.add(user)
         db.session.commit()
         return user
-
-
-
-

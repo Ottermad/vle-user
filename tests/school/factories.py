@@ -3,7 +3,7 @@ from faker import Faker
 from app import db
 
 from app.school.models import School
-from app.permissions.models import Permission, Role
+from app.permissions.models import Permission
 
 fake = Faker()
 

@@ -17,7 +17,11 @@ class Development(Config):
     """Config used in development."""
 
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@db/{}'.format(DATABASE_NAME)
+    PG_PASSWORD = 'postgres'
+    PG_HOST = 'db'
+    PG_USER = 'postgres'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}/{}'.format(
+        PG_USER, PG_PASSWORD, PG_HOST, DATABASE_NAME)
 
 
 class Testing(Config):
@@ -27,9 +31,28 @@ class Testing(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(
         basedir, 'testing-database.sqlite')
     PRESERVE_CONTEXT_ON_EXCEPTION = False
+    NO_REGISTER = True
+
+
+class Migrations(Development):
+    """Used to run migrations on docker-compose."""
+
+    NO_REGISTER = True
+
+
+class Minikube(Config):
+    DEBUG = True
+    PG_PASSWORD = os.environ.get('PG_PASSWORD', 'postgres')
+    PG_HOST = 'killer-gibbon-postgresql'
+    PG_USER = 'postgres'
+    SQLALCHEMY_DATABASE_URI = "postgresql://{}:{}@{}/{}".format(
+        PG_USER, PG_PASSWORD, PG_HOST, DATABASE_NAME)
+
 
 config = {
     'development': Development,
     'testing': Testing,
+    'minikube': Minikube,
+    'migrations':  Migrations,
     'default': Development
 }
